@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use FizzBuzz\FizzBuzz;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$limit = filter_var($argv[1] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+
+if ($limit === false) {
+    fwrite(STDERR, "Usage: bin/fizzbuzz <N>   (N: integer >= 1)\n");
+    exit(1);
+}
+
+foreach (FizzBuzz::classic()->upTo($limit) as $line) {
+    echo $line, PHP_EOL;
+}

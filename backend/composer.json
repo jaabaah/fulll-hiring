@@ -4,7 +4,8 @@
     "type": "project",
     "license": "MIT",
     "require": {
-        "php": ">=8.4",
+        "php": "^8.4",
+        "ext-pdo_pgsql": "*",
         "symfony/console": "^8.1"
     },
     "autoload": {
@@ -28,11 +29,13 @@
         "cs": "php-cs-fixer check --diff",
         "cs:fix": "php-cs-fixer fix",
         "phpstan": "phpstan analyse --no-progress",
-        "deptrac": "deptrac analyse --no-progress",
+        "deptrac": "deptrac analyse --no-progress --fail-on-uncovered",
         "test:unit": "phpunit --testsuite unit",
         "test:integration": "phpunit --testsuite integration",
         "behat": "behat",
         "check": [
+            "@composer validate --strict",
+            "@composer audit",
             "@cs",
             "@phpstan",
             "@deptrac",

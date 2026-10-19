@@ -19,7 +19,13 @@ deptrac:
       collectors:
         - type: classLike
           value: ^Symfony\\.*
+    # PHP's own classes are ignored by default, so the database extension needs a layer of its own.
+    - name: Pdo
+      collectors:
+        - type: php_internal
+          value: ^PDO
   ruleset:
-    Domain: ~                     # pure PHP: depends on nothing
-    App: [Domain]                 # use cases orchestrate the domain
-    Infra: [App, Domain, Vendor]  # adapters: the only layer allowed to use libraries
+    Domain: ~                          # pure PHP: depends on nothing
+    App: [Domain]                      # use cases orchestrate the domain
+    Infra: [App, Domain, Vendor, Pdo]  # adapters: the only layer allowed to use libraries and the database
+# Any other library is in no layer: composer.json runs Deptrac with --fail-on-uncovered, so using one fails too.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fulll\Domain;
 
+use Fulll\Domain\Exception\FleetModifiedConcurrently;
 use Fulll\Domain\Exception\FleetNotFound;
 
 /**
@@ -16,5 +17,11 @@ interface FleetRepository
      */
     public function get(FleetId $id): Fleet;
 
+    /**
+     * Optimistic locking: a fleet can only be saved if nobody saved it since it was loaded
+     * (or, for a new fleet, if no fleet has this id yet). Otherwise nothing is written.
+     *
+     * @throws FleetModifiedConcurrently
+     */
     public function save(Fleet $fleet): void;
 }

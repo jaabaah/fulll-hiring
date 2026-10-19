@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Fulll\Tests\Unit\Domain;
 
+use Fulll\Domain\Exception\InvalidValue;
 use Fulll\Domain\FleetId;
-use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -35,7 +35,7 @@ final class FleetIdTest extends TestCase
     #[Test]
     public function itRejectsAValueThatIsNotAUuid(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidValue::class);
 
         new FleetId('not-a-uuid');
     }

@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Fulll\Tests\Unit\Infra\Cli;
 
+use Fulll\Domain\Fleet;
 use Fulll\Domain\FleetId;
+use Fulll\Domain\FleetRepository;
 use Fulll\Domain\Location;
 use Fulll\Domain\PlateNumber;
 use Fulll\Infra\Cli\FleetApplication;
 use Fulll\Infra\InMemory\InMemoryFleetRepository;
 use Fulll\Tests\Assertion\LocationAssertions;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
@@ -83,6 +86,38 @@ final class FleetApplicationTest extends TestCase
 
         self::assertSame(Command::FAILURE, $exitCode);
         self::assertStringContainsString('not a valid fleet id', $this->cli->getErrorOutput());
+    }
+
+    #[Test]
+    public function registerVehicleFailsWhenThePlateNumberIsTooLong(): void
+    {
+        $fleetId = $this->createFleet();
+
+        $exitCode = $this->runCli(['command' => 'register-vehicle', 'fleet-id' => $fleetId, 'vehicle-plate-number' => str_repeat('A', 33)]);
+
+        self::assertSame(Command::FAILURE, $exitCode);
+        self::assertStringContainsString('at most 32 printable characters', $this->cli->getErrorOutput());
+    }
+
+    #[Test]
+    public function anUnexpectedErrorIsNotPresentedAsARefusedRule(): void
+    {
+        // An SPL exception that does not come from the fleet model is a bug: it keeps the default handling.
+        $failingRepository = new class implements FleetRepository {
+            public function get(FleetId $id): Fleet
+            {
+                throw new InvalidArgumentException('A bug, not a mistake of the user.');
+            }
+
+            public function save(Fleet $fleet): void {}
+        };
+        $application = FleetApplication::create($failingRepository);
+        $application->setAutoExit(false);
+        $application->setCatchExceptions(false);
+
+        $this->expectException(InvalidArgumentException::class);
+
+        new ApplicationTester($application)->run(['command' => 'register-vehicle', 'fleet-id' => FleetId::generate()->value, 'vehicle-plate-number' => 'AB-123-CD']);
     }
 
     #[Test]

@@ -1,0 +1,23 @@
+{
+    "name": "dsaintdenis/fleet",
+    "description": "Vehicle fleet parking management - Fulll hiring test",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fulll\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fulll\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "behat/behat": "^4.0",
+        "phpunit/phpunit": "^13.4"
+    }
+}

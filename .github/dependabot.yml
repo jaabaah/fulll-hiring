@@ -1,0 +1,7 @@
+# The actions of the CI are pinned by commit SHA: Dependabot proposes their updates.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -7,7 +7,7 @@ namespace Fulll\Domain\Exception;
 use DomainException;
 use Fulll\Domain\PlateNumber;
 
-final class VehicleAlreadyRegistered extends DomainException
+final class VehicleAlreadyRegistered extends DomainException implements FleetException
 {
     public static function withPlate(PlateNumber $plate): self
     {

@@ -19,7 +19,7 @@ bin/fizzbuzz 100
 
 ```bash
 composer test    # tests unitaires PHPUnit
-composer check   # tout ce que lance la CI : style (PHP-CS-Fixer), analyse statique (PHPStan niveau max), tests
+composer check   # tout ce que lance la CI : composer validate, style (PHP-CS-Fixer), analyse statique (PHPStan niveau max), tests
 ```
 
 ## Choix de conception
@@ -41,6 +41,6 @@ composer check   # tout ce que lance la CI : style (PHP-CS-Fixer), analyse stati
   Mesuré : N = 10 000 000 avec environ 27 Mo de mémoire, la même empreinte que pour N = 15.
 - **Typage strict et immuabilité** : `declare(strict_types=1)`, classes `final readonly`, constructeur variadique
   `Rule ...$rules` (le typage garantit qu'on ne passe que des règles).
-- **Validation aux frontières** : `Rule` et `upTo()` rejettent les valeurs invalides,
-  et la CLI renvoie un code de sortie 1 avec un message d'usage.
+- **Validation aux frontières** : `Rule` et `upTo()` rejettent les valeurs invalides, `upTo()` dès l'appel
+  et non à la première itération (seule la séquence est paresseuse), et la CLI renvoie un code de sortie 1 avec un message d'usage.
 - **Volontairement simple** : pas d'interface `RuleInterface` tant qu'il n'existe qu'une sorte de règle (YAGNI).

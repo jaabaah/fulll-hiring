@@ -1,9 +1,11 @@
 -- One fleet per user creation. A vehicle (plate number) can belong to several fleets,
 -- each fleet keeping its own known location of the vehicle.
+-- Column sizes follow the limits of the domain (UserId::MAX_LENGTH, PlateNumber::MAX_LENGTH).
 
 CREATE TABLE fleets (
     id      UUID PRIMARY KEY,
-    user_id VARCHAR(255) NOT NULL
+    user_id VARCHAR(255) NOT NULL,
+    version INTEGER NOT NULL DEFAULT 0 -- optimistic locking: incremented by every save of the fleet
 );
 
 CREATE TABLE fleet_vehicles (
@@ -13,5 +15,6 @@ CREATE TABLE fleet_vehicles (
     longitude    DOUBLE PRECISION NULL,
     altitude     DOUBLE PRECISION NULL,
     PRIMARY KEY (fleet_id, plate_number),
-    CHECK ((latitude IS NULL) = (longitude IS NULL))
+    CHECK ((latitude IS NULL) = (longitude IS NULL)),
+    CHECK (altitude IS NULL OR latitude IS NOT NULL)
 );

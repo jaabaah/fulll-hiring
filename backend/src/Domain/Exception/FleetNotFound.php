@@ -7,7 +7,7 @@ namespace Fulll\Domain\Exception;
 use DomainException;
 use Fulll\Domain\FleetId;
 
-final class FleetNotFound extends DomainException
+final class FleetNotFound extends DomainException implements FleetException
 {
     public static function withId(FleetId $id): self
     {

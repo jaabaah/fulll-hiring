@@ -9,14 +9,25 @@ use Fulll\Infra\Postgres\PostgresFleetRepository;
 
 require __DIR__ . '/vendor/autoload.php';
 
-// Defaults to the database started by compose.yaml.
-$databaseUrl = getenv('DATABASE_URL') ?: 'postgresql://fleet:fleet@127.0.0.1:5442/fleet';
+// Lazy proxy: the database is only reached when a command uses the repository, so `--help` or `list` work without it,
+// and a configuration or connection problem is reported like any other error of the command, with exit code 1.
+$fleets = new ReflectionClass(PostgresFleetRepository::class)->newLazyProxy(
+    static function (): PostgresFleetRepository {
+        $databaseUrl = getenv('DATABASE_URL');
 
-try {
-    $pdo = PdoFactory::fromUrl($databaseUrl);
-} catch (PDOException $error) {
-    fwrite(STDERR, sprintf("Cannot connect to the database (is it started? docker compose up -d): %s\n", $error->getMessage()));
-    exit(1);
-}
+        if (!is_string($databaseUrl) || $databaseUrl === '') {
+            throw new RuntimeException('DATABASE_URL is not set, e.g. export DATABASE_URL=postgresql://user:password@host:5432/database');
+        }
 
-exit(FleetApplication::create(new PostgresFleetRepository($pdo))->run());
+        try {
+            return new PostgresFleetRepository(PdoFactory::fromUrl($databaseUrl));
+        } catch (PDOException $error) {
+            throw new RuntimeException(
+                sprintf('Cannot connect to the database (is it started? docker compose up -d): %s', $error->getMessage()),
+                previous: $error,
+            );
+        }
+    },
+);
+
+exit(FleetApplication::create($fleets)->run());

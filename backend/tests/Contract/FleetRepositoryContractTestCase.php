@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fulll\Tests\Contract;
 
+use Fulll\Domain\Exception\FleetModifiedConcurrently;
 use Fulll\Domain\Exception\FleetNotFound;
 use Fulll\Domain\Fleet;
 use Fulll\Domain\FleetId;
@@ -122,5 +123,73 @@ abstract class FleetRepositoryContractTestCase extends TestCase
 
         self::assertSameLocation($myLocation, $this->repository->get($myFleet->id)->locationOf($plate));
         self::assertNull($this->repository->get($otherFleet->id)->locationOf($plate));
+    }
+
+    #[Test]
+    public function itPersistsTheLongestValuesTheDomainAccepts(): void
+    {
+        // Multibyte on purpose: the storage must count characters like the domain does, not bytes.
+        $plate = new PlateNumber(str_repeat('É', PlateNumber::MAX_LENGTH));
+        $fleet = Fleet::create(FleetId::generate(), new UserId(str_repeat('é', UserId::MAX_LENGTH)));
+        $fleet->register($plate);
+
+        $this->repository->save($fleet);
+        $found = $this->repository->get($fleet->id);
+
+        self::assertSame($fleet->userId->value, $found->userId->value);
+        self::assertTrue($found->hasVehicle($plate));
+    }
+
+    #[Test]
+    public function aFleetCanBeSavedSeveralTimes(): void
+    {
+        $plate = new PlateNumber('AB-123-CD');
+        $fleet = Fleet::create(FleetId::generate(), new UserId('john'));
+        $this->repository->save($fleet);
+
+        $fleet->register($plate);
+        $this->repository->save($fleet);
+        $fleet->park($plate, new Location(43.5283, 5.4497));
+        $this->repository->save($fleet);
+
+        self::assertSameLocation(new Location(43.5283, 5.4497), $this->repository->get($fleet->id)->locationOf($plate));
+    }
+
+    #[Test]
+    public function itRefusesToSaveAFleetSavedByOthersSinceItWasLoaded(): void
+    {
+        // Two commands load the same fleet at the same time, and change two different vehicles.
+        $parkedPlate = new PlateNumber('AB-123-CD');
+        $fleet = Fleet::create(FleetId::generate(), new UserId('john'));
+        $fleet->register($parkedPlate);
+        $fleet->park($parkedPlate, new Location(43.5283, 5.4497));
+        $this->repository->save($fleet);
+        $first = $this->repository->get($fleet->id);
+        $second = $this->repository->get($fleet->id);
+
+        $first->park($parkedPlate, new Location(43.2965, 5.3698));
+        $this->repository->save($first);
+        $second->register(new PlateNumber('EF-456-GH'));
+
+        try {
+            $this->repository->save($second);
+            self::fail('A fleet saved by someone else since it was loaded must not be saved.');
+        } catch (FleetModifiedConcurrently) {
+        }
+
+        $found = $this->repository->get($fleet->id);
+        self::assertSameLocation(new Location(43.2965, 5.3698), $found->locationOf($parkedPlate));
+        self::assertFalse($found->hasVehicle(new PlateNumber('EF-456-GH')));
+    }
+
+    #[Test]
+    public function itRefusesToSaveANewFleetWithTheIdOfAnExistingOne(): void
+    {
+        $id = FleetId::generate();
+        $this->repository->save(Fleet::create($id, new UserId('john')));
+
+        $this->expectException(FleetModifiedConcurrently::class);
+
+        $this->repository->save(Fleet::create($id, new UserId('jane')));
     }
 }

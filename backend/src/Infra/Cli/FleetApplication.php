@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Fulll\Infra\Cli;
 
-use DomainException;
 use Fulll\App\Command\CreateFleetHandler;
 use Fulll\App\Command\ParkVehicleHandler;
 use Fulll\App\Command\RegisterVehicleHandler;
+use Fulll\Domain\Exception\FleetException;
 use Fulll\Domain\FleetRepository;
-use InvalidArgumentException;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -37,14 +36,14 @@ final class FleetApplication extends Application
     }
 
     /**
-     * Turns refused business rules and invalid inputs into a readable error and a failure exit code,
-     * in one place for every command. Unexpected errors keep the default handling.
+     * Turns the errors raised on purpose (refused business rules, invalid inputs) into a readable error
+     * and a failure exit code, in one place for every command. Unexpected errors keep the default handling.
      */
     protected function doRunCommand(Command $command, InputInterface $input, OutputInterface $output): int
     {
         try {
             return parent::doRunCommand($command, $input, $output);
-        } catch (DomainException|InvalidArgumentException $error) {
+        } catch (FleetException|InvalidInput $error) {
             new SymfonyStyle($input, $output)->getErrorStyle()->error($error->getMessage());
 
             return Command::FAILURE;

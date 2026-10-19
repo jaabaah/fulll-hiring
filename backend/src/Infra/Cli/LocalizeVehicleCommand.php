@@ -6,7 +6,6 @@ namespace Fulll\Infra\Cli;
 
 use Fulll\App\Command\ParkVehicle;
 use Fulll\App\Command\ParkVehicleHandler;
-use InvalidArgumentException;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -48,6 +47,6 @@ final readonly class LocalizeVehicleCommand
     private static function toFloat(string $name, string $value): float
     {
         return filter_var($value, FILTER_VALIDATE_FLOAT, FILTER_NULL_ON_FAILURE)
-            ?? throw new InvalidArgumentException(sprintf('%s must be a number, "%s" given.', $name, $value));
+            ?? throw InvalidInput::notANumber($name, $value);
     }
 }

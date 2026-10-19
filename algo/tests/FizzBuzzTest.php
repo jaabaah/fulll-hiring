@@ -46,8 +46,8 @@ final class FizzBuzzTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        // The generator is lazy: the exception is thrown on the first iteration.
-        FizzBuzz::classic()->upTo(0)->current();
+        // Thrown by the call itself, without iterating: the sequence is lazy, not its validation.
+        FizzBuzz::classic()->upTo(0);
     }
 
     #[Test]

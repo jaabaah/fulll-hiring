@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Fulll\Domain;
 
-use InvalidArgumentException;
+use Fulll\Domain\Exception\InvalidValue;
 
 final readonly class FleetId
 {
@@ -13,7 +13,7 @@ final readonly class FleetId
     public function __construct(public string $value)
     {
         if (preg_match(self::UUID_PATTERN, $value) !== 1) {
-            throw new InvalidArgumentException(sprintf('"%s" is not a valid fleet id.', $value));
+            throw new InvalidValue(sprintf('"%s" is not a valid fleet id.', $value));
         }
     }
 

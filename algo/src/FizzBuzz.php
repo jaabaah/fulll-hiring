@@ -24,7 +24,7 @@ final readonly class FizzBuzz
 
     /**
      * Lazily yields the conversion of every number from 1 to $limit:
-     * O(n) time, O(1) memory.
+     * O(n) time, O(1) memory. An invalid limit is refused right away, not on the first iteration.
      *
      * @return Generator<int, string>
      */
@@ -34,6 +34,14 @@ final readonly class FizzBuzz
             throw new InvalidArgumentException(sprintf('Limit must be at least 1, %d given.', $limit));
         }
 
+        return $this->sequence($limit);
+    }
+
+    /**
+     * @return Generator<int, string>
+     */
+    private function sequence(int $limit): Generator
+    {
         for ($number = 1; $number <= $limit; ++$number) {
             yield $number => $this->convert($number);
         }

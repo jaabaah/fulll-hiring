@@ -1,0 +1,123 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Fulll\Tests\Contract;
+
+use Fulll\Domain\Exception\FleetNotFound;
+use Fulll\Domain\Fleet;
+use Fulll\Domain\FleetId;
+use Fulll\Domain\FleetRepository;
+use Fulll\Domain\Location;
+use Fulll\Domain\PlateNumber;
+use Fulll\Domain\UserId;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Behavior every FleetRepository adapter must provide (Liskov substitution):
+ * each adapter's test extends this class and only says how to build the adapter.
+ */
+abstract class FleetRepositoryContractTestCase extends TestCase
+{
+    private FleetRepository $repository;
+
+    /**
+     * Must return an empty repository.
+     */
+    abstract protected function createRepository(): FleetRepository;
+
+    protected function setUp(): void
+    {
+        $this->repository = $this->createRepository();
+    }
+
+    #[Test]
+    public function itGetsASavedFleet(): void
+    {
+        $fleet = Fleet::create(FleetId::generate(), new UserId('john'));
+
+        $this->repository->save($fleet);
+        $found = $this->repository->get($fleet->id);
+
+        self::assertTrue($found->id->equals($fleet->id));
+        self::assertSame('john', $found->userId->value);
+        self::assertSame([], $found->vehicles());
+    }
+
+    #[Test]
+    public function itFailsToGetAnUnknownFleet(): void
+    {
+        $this->expectException(FleetNotFound::class);
+
+        $this->repository->get(FleetId::generate());
+    }
+
+    #[Test]
+    public function changesAreOnlyPersistedWhenTheFleetIsSaved(): void
+    {
+        $fleet = Fleet::create(FleetId::generate(), new UserId('john'));
+        $this->repository->save($fleet);
+        $plate = new PlateNumber('AB-123-CD');
+
+        $this->repository->get($fleet->id)->register($plate);
+
+        self::assertFalse($this->repository->get($fleet->id)->hasVehicle($plate));
+    }
+
+    #[Test]
+    public function itPersistsVehiclesWithTheirLocation(): void
+    {
+        $withAltitude = new Location(43.5283, 5.4497, 173.5);
+        $withoutAltitude = new Location(-33.8688, 151.2093);
+        $fleet = Fleet::create(FleetId::generate(), new UserId('john'));
+        $fleet->register(new PlateNumber('AB-123-CD'));
+        $fleet->register(new PlateNumber('EF-456-GH'));
+        $fleet->register(new PlateNumber('IJ-789-KL'));
+        $fleet->park(new PlateNumber('AB-123-CD'), $withAltitude);
+        $fleet->park(new PlateNumber('EF-456-GH'), $withoutAltitude);
+
+        $this->repository->save($fleet);
+        $found = $this->repository->get($fleet->id);
+
+        self::assertCount(3, $found->vehicles());
+        self::assertTrue($withAltitude->equals($found->locationOf(new PlateNumber('AB-123-CD'))));
+        self::assertTrue($withoutAltitude->equals($found->locationOf(new PlateNumber('EF-456-GH'))));
+        self::assertNull($found->locationOf(new PlateNumber('IJ-789-KL')));
+    }
+
+    #[Test]
+    public function itPersistsANewLocationOfAVehicle(): void
+    {
+        $plate = new PlateNumber('AB-123-CD');
+        $newLocation = new Location(43.2965, 5.3698);
+        $fleet = Fleet::create(FleetId::generate(), new UserId('john'));
+        $fleet->register($plate);
+        $fleet->park($plate, new Location(43.5283, 5.4497));
+        $this->repository->save($fleet);
+
+        $fleet = $this->repository->get($fleet->id);
+        $fleet->park($plate, $newLocation);
+        $this->repository->save($fleet);
+
+        self::assertTrue($newLocation->equals($this->repository->get($fleet->id)->locationOf($plate)));
+    }
+
+    #[Test]
+    public function eachFleetKeepsItsOwnLocationOfASharedVehicle(): void
+    {
+        $plate = new PlateNumber('AB-123-CD');
+        $myLocation = new Location(43.5283, 5.4497);
+        $myFleet = Fleet::create(FleetId::generate(), new UserId('john'));
+        $otherFleet = Fleet::create(FleetId::generate(), new UserId('jane'));
+        $myFleet->register($plate);
+        $otherFleet->register($plate);
+        $myFleet->park($plate, $myLocation);
+
+        $this->repository->save($myFleet);
+        $this->repository->save($otherFleet);
+
+        self::assertTrue($myLocation->equals($this->repository->get($myFleet->id)->locationOf($plate)));
+        self::assertNull($this->repository->get($otherFleet->id)->locationOf($plate));
+    }
+}

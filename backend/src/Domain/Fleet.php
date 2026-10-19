@@ -79,7 +79,7 @@ final class Fleet
     }
 
     /**
-     * @return list<Vehicle> in registration order
+     * @return list<Vehicle>
      */
     public function vehicles(): array
     {

@@ -6,9 +6,16 @@
          cacheDirectory=".phpunit.cache"
          failOnRisky="true"
          failOnWarning="true">
+    <php>
+        <!-- Test database started by compose.yaml; can be overridden by a real environment variable. -->
+        <env name="DATABASE_URL" value="postgresql://fleet:fleet@127.0.0.1:5442/fleet_test"/>
+    </php>
     <testsuites>
         <testsuite name="unit">
             <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
     <source>

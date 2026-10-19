@@ -17,11 +17,11 @@ final readonly class Location
         public ?float $altitude = null,
     ) {
         if ($latitude < -90.0 || $latitude > 90.0) {
-            throw new InvalidArgumentException(sprintf('Latitude must be between -90 and 90, %F given.', $latitude));
+            throw new InvalidArgumentException(sprintf('Latitude must be between -90 and 90, %s given.', $latitude));
         }
 
         if ($longitude < -180.0 || $longitude > 180.0) {
-            throw new InvalidArgumentException(sprintf('Longitude must be between -180 and 180, %F given.', $longitude));
+            throw new InvalidArgumentException(sprintf('Longitude must be between -180 and 180, %s given.', $longitude));
         }
     }
 

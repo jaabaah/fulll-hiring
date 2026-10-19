@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Fulll\Infra\Cli\FleetApplication;
+use Fulll\Infra\Postgres\PdoFactory;
+use Fulll\Infra\Postgres\PostgresFleetRepository;
+
+require __DIR__ . '/vendor/autoload.php';
+
+// Defaults to the database started by compose.yaml.
+$databaseUrl = getenv('DATABASE_URL') ?: 'postgresql://fleet:fleet@127.0.0.1:5442/fleet';
+
+try {
+    $pdo = PdoFactory::fromUrl($databaseUrl);
+} catch (PDOException $error) {
+    fwrite(STDERR, sprintf("Cannot connect to the database (is it started? docker compose up -d): %s\n", $error->getMessage()));
+    exit(1);
+}
+
+exit(FleetApplication::create(new PostgresFleetRepository($pdo))->run());

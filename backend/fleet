@@ -13,11 +13,8 @@ require __DIR__ . '/vendor/autoload.php';
 // and a configuration or connection problem is reported like any other error of the command, with exit code 1.
 $fleets = new ReflectionClass(PostgresFleetRepository::class)->newLazyProxy(
     static function (): PostgresFleetRepository {
-        $databaseUrl = getenv('DATABASE_URL');
-
-        if (!is_string($databaseUrl) || $databaseUrl === '') {
-            throw new RuntimeException('DATABASE_URL is not set, e.g. export DATABASE_URL=postgresql://user:password@host:5432/database');
-        }
+        // Defaults to the database started by compose.yaml.
+        $databaseUrl = getenv('DATABASE_URL') ?: 'postgresql://fleet:fleet@127.0.0.1:5442/fleet';
 
         try {
             return new PostgresFleetRepository(PdoFactory::fromUrl($databaseUrl));

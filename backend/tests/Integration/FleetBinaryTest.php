@@ -23,15 +23,6 @@ final class FleetBinaryTest extends TestCase
     }
 
     #[Test]
-    public function aMissingDatabaseUrlIsReportedAsAnError(): void
-    {
-        [$exitCode, , $errorOutput] = self::fleet([], ['create', 'john']);
-
-        self::assertSame(1, $exitCode);
-        self::assertStringContainsString('DATABASE_URL is not set', $errorOutput);
-    }
-
-    #[Test]
     public function anInvalidDatabaseUrlIsReportedAsAnError(): void
     {
         [$exitCode, , $errorOutput] = self::fleet(['DATABASE_URL' => 'mysql://fleet@127.0.0.1/fleet'], ['create', 'john']);
@@ -45,7 +36,7 @@ final class FleetBinaryTest extends TestCase
     public function anUnreachableDatabaseIsReportedAsAnError(): void
     {
         [$exitCode, , $errorOutput] = self::fleet(
-            ['DATABASE_URL' => 'postgresql://fleet:fleet@127.0.0.1:1/fleet?connect_timeout=2'],
+            ['DATABASE_URL' => 'postgresql://fleet:fleet@127.0.0.1:1/fleet'],
             ['create', 'john'],
         );
 

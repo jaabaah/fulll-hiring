@@ -14,7 +14,6 @@ Prérequis : PHP ≥ 8.4 avec l'extension `pdo_pgsql`, Composer et Docker.
 ```bash
 composer install
 docker compose up -d   # PostgreSQL 18 sur le port 5442 : bases "fleet" et "fleet_test"
-export DATABASE_URL=postgresql://fleet:fleet@127.0.0.1:5442/fleet
 
 FLEET_ID=$(./fleet create john)
 ./fleet register-vehicle "$FLEET_ID" AB-123-CD
@@ -28,11 +27,9 @@ FLEET_ID=$(./fleet create john)
 | `./fleet localize-vehicle <fleetId> <vehiclePlateNumber> lat lng [alt]` | Indique où le véhicule est garé (degrés décimaux, altitude en mètres). |
 
 Une règle métier refusée (véhicule déjà enregistré, déjà garé à cet endroit…), une saisie invalide
-(latitude hors bornes, valeur non numérique, plaque trop longue…) ou une modification concurrente de la flotte
-affiche un message clair sur la sortie d'erreur, avec le code de sortie `1`.
+(latitude hors bornes, valeur non numérique, plaque trop longue…) affiche un message clair sur la sortie d'erreur, avec le code de sortie `1`.
 
-La connexion se configure avec `DATABASE_URL`, **obligatoire** : sans elle, seules l'aide et `./fleet list` fonctionnent.
-Ses paramètres de requête sont transmis à libpq, par exemple `?sslmode=require&connect_timeout=5`.
+La connexion se configure avec `DATABASE_URL`, par défaut `postgresql://fleet:fleet@127.0.0.1:5442/fleet` (la base de `docker compose`).
 
 ## Tests et qualité
 
@@ -95,10 +92,9 @@ Toute autre librairie n'appartient à aucune couche : Deptrac tourne avec `--fai
   - `PlateNumber` : normalisée, pour que `ab-123-cd` et `AB-123-CD` soient le même véhicule, et d'au plus 32 caractères imprimables ;
   - `Location` : latitude et longitude bornées, altitude optionnelle, toutes finies (`NAN` et `INF` sont refusés).
   - Les tailles des colonnes SQL découlent de ces limites, et non l'inverse : le test de contrat vérifie que la base accepte les plus longues valeurs du domaine.
-- **Les exceptions** implémentent toutes `FleetException`, le seul type que la CLI transforme en message d'erreur. Elles se répartissent en trois familles :
+- **Les exceptions** implémentent toutes `FleetException`, le seul type que la CLI transforme en message d'erreur. Elles se répartissent en deux familles :
   - `InvalidArgumentException` (`InvalidValue`) pour une donnée invalide ;
-  - `DomainException` pour une règle métier refusée ;
-  - `RuntimeException` (`FleetModifiedConcurrently`) pour une modification concurrente, qu'il suffit de relancer.
+  - `DomainException` pour une règle métier refusée.
   - Toute autre exception est un bug et garde l'affichage par défaut de Symfony Console. C'est le cas d'un état stocké qui viole une règle du domaine :
     le repository le signale comme une donnée corrompue (`UnexpectedValueException`), pas comme une erreur de l'utilisateur.
 
@@ -129,18 +125,12 @@ Toute autre librairie n'appartient à aucune couche : Deptrac tourne avec `--fai
   - reconstruit la flotte avec `Fleet::reconstitute()`, qui **repasse par les règles du domaine** ;
   - vérifie le type de chaque valeur lue en base ;
   - sauvegarde l'agrégat entier dans **une transaction**, avec des requêtes préparées.
-- **Concurrence : verrouillage optimiste.** Deux commandes simultanées sur la même flotte (par exemple `localize-vehicle` et
-  `register-vehicle`) chargent le même état. Sans protection, la seconde sauvegarde réécrirait tous les véhicules avec cet état périmé et
-  effacerait la première. Une colonne `fleets.version` est donc vérifiée et incrémentée à chaque sauvegarde : la seconde commande échoue
-  avec `FleetModifiedConcurrently`, sans rien écrire, et peut être relancée.
-  - La version est mémorisée par le repository (un `WeakMap` par flotte chargée), pas par l'agrégat : le domaine ignore la persistance.
-  - Les deux repositories appliquent la même règle, vérifiée par le test de contrat.
 - **Le composant `symfony/console`, pas le framework Symfony.** C'est autorisé par l'énoncé à l'étape 2, et il est
   limité à la couche `Infra`, ce que Deptrac vérifie. L'assemblage se fait par injection de dépendances manuelle :
   `FleetApplication::create()` branche les handlers sur un repository, et l'exécutable `fleet` lui fournit le repository PostgreSQL.
   Un conteneur serait superflu pour 3 commandes.
   - Ce repository est un *lazy proxy* natif de PHP 8.4 : la base n'est contactée qu'à la première requête. `./fleet list` fonctionne
-    donc sans base, et une configuration absente ou une base injoignable s'affiche comme une erreur de la commande (code `1`).
+    donc sans base, et une URL invalide ou une base injoignable s'affiche comme une erreur de la commande (code `1`).
 - **Les coordonnées négatives.** Par défaut, Symfony Console lit `-33.8688` comme l'option `-3`.
   `CoordinatesArgvInput` traite tout nombre comme un argument (la CLI n'a aucune option numérique), et un test le couvre.
 
@@ -180,8 +170,11 @@ Les actions sont épinglées par SHA de commit, et Dependabot (`.github/dependab
 
 ## Limites connues et évolutions possibles
 
+- **Concurrence.** Deux commandes simultanées sur la même flotte chargent le même état : la dernière sauvegarde gagne.
+  Pour une CLI mono-utilisateur, c'est acceptable. La solution serait un verrouillage optimiste : une colonne `version`
+  vérifiée et incrémentée à chaque sauvegarde, la seconde commande échouant sans rien écrire.
 - **Migrations.** Le schéma est appliqué par `database/schema.sql` au premier démarrage du conteneur.
-  Il a déjà évolué une fois (colonne `version`, contrainte sur l'altitude) : une base créée avant se recrée avec
+  Il a déjà évolué une fois (contrainte sur l'altitude) : une base créée avant se recrée avec
   `docker compose down -v && docker compose up -d`, ce qui efface ses données. La prochaine évolution justifierait un outil de migrations.
 - **Événements de domaine** (`VehicleParked`…). Ils seraient à introduire si un besoin réel apparaît : notification, historique des positions, projection de lecture.
 - **Modèle de lecture dédié.** Les requêtes relisent aujourd'hui l'agrégat complet, ce qui suffit à cette échelle.

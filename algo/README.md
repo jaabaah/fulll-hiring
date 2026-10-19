@@ -15,10 +15,11 @@ composer install
 bin/fizzbuzz 100
 ```
 
-## Tests
+## Tests et qualité
 
 ```bash
-composer test
+composer test    # tests unitaires PHPUnit
+composer check   # tout ce que lance la CI : style (PHP-CS-Fixer), analyse statique (PHPStan niveau max), tests
 ```
 
 ## Choix de conception

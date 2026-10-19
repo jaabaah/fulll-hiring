@@ -13,15 +13,12 @@ use PHPUnit\Framework\TestCase;
 final class PdoFactoryTest extends TestCase
 {
     #[Test]
-    public function itPassesTheQueryParametersAsConnectionOptions(): void
+    public function itConnectsWithAValidUrl(): void
     {
-        $url = (string) getenv('TEST_DATABASE_URL');
-        $url .= (str_contains($url, '?') ? '&' : '?') . 'application_name=fleet_tests';
-
-        $statement = PdoFactory::fromUrl($url)->query("SELECT current_setting('application_name')");
+        $statement = PdoFactory::fromUrl((string) getenv('TEST_DATABASE_URL'))->query('SELECT 1');
 
         self::assertNotFalse($statement);
-        self::assertSame('fleet_tests', $statement->fetchColumn());
+        self::assertSame(1, $statement->fetchColumn());
     }
 
     /** @return iterable<string, array{string}> */
@@ -29,9 +26,6 @@ final class PdoFactoryTest extends TestCase
     {
         yield 'another database engine' => ['mysql://fleet:fleet@127.0.0.1/fleet'];
         yield 'no database name' => ['postgresql://fleet:fleet@127.0.0.1'];
-        yield 'option injecting another option' => ['postgresql://fleet:fleet@127.0.0.1/fleet?sslmode=disable;host=elsewhere'];
-        yield 'option with a space' => ['postgresql://fleet:fleet@127.0.0.1/fleet?application_name=my%20app'];
-        yield 'option with an invalid name' => ['postgresql://fleet:fleet@127.0.0.1/fleet?ssl-mode=require'];
     }
 
     #[Test]

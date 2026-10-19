@@ -4,8 +4,7 @@
 
 CREATE TABLE fleets (
     id      UUID PRIMARY KEY,
-    user_id VARCHAR(255) NOT NULL,
-    version INTEGER NOT NULL DEFAULT 0 -- optimistic locking: incremented by every save of the fleet
+    user_id VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE fleet_vehicles (

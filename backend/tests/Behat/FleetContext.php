@@ -104,7 +104,7 @@ final class FleetContext implements Context
     #[When('I try to register this vehicle into my fleet')]
     public function iTryToRegisterThisVehicleIntoMyFleet(): void
     {
-        $this->attempt(fn () => $this->registerVehicle($this->myFleetId));
+        $this->attempt(fn() => $this->registerVehicle($this->myFleetId));
     }
 
     #[Given('my vehicle has been parked into this location')]

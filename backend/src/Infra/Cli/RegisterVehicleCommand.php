@@ -16,12 +16,13 @@ final readonly class RegisterVehicleCommand
 {
     public function __construct(
         private RegisterVehicleHandler $registerVehicle,
-    ) {
-    }
+    ) {}
 
     public function __invoke(
-        #[Argument(description: 'Id of the fleet')] string $fleetId,
-        #[Argument(description: 'Plate number of the vehicle')] string $vehiclePlateNumber,
+        #[Argument(description: 'Id of the fleet')]
+        string $fleetId,
+        #[Argument(description: 'Plate number of the vehicle')]
+        string $vehiclePlateNumber,
         OutputInterface $output,
     ): int {
         ($this->registerVehicle)(new RegisterVehicle($fleetId, $vehiclePlateNumber));

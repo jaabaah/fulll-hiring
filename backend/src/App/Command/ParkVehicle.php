@@ -12,6 +12,5 @@ final readonly class ParkVehicle
         public float $latitude,
         public float $longitude,
         public ?float $altitude = null,
-    ) {
-    }
+    ) {}
 }

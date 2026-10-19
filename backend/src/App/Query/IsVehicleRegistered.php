@@ -9,6 +9,5 @@ final readonly class IsVehicleRegistered
     public function __construct(
         public string $fleetId,
         public string $plateNumber,
-    ) {
-    }
+    ) {}
 }

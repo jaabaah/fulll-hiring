@@ -12,8 +12,7 @@ final readonly class IsVehicleRegisteredHandler
 {
     public function __construct(
         private FleetRepository $fleets,
-    ) {
-    }
+    ) {}
 
     public function __invoke(IsVehicleRegistered $query): bool
     {

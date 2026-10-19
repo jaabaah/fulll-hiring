@@ -8,6 +8,5 @@ final readonly class CreateFleet
 {
     public function __construct(
         public string $userId,
-    ) {
-    }
+    ) {}
 }

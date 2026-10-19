@@ -20,8 +20,7 @@ final class Fleet
     private function __construct(
         public readonly FleetId $id,
         public readonly UserId $userId,
-    ) {
-    }
+    ) {}
 
     /**
      * A brand new fleet, without any vehicle.

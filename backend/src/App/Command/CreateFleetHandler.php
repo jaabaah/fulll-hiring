@@ -13,8 +13,7 @@ final readonly class CreateFleetHandler
 {
     public function __construct(
         private FleetRepository $fleets,
-    ) {
-    }
+    ) {}
 
     /**
      * Deliberate exception to strict CQRS: the generated id is returned,

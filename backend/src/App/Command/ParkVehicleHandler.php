@@ -13,8 +13,7 @@ final readonly class ParkVehicleHandler
 {
     public function __construct(
         private FleetRepository $fleets,
-    ) {
-    }
+    ) {}
 
     public function __invoke(ParkVehicle $command): void
     {

@@ -13,6 +13,7 @@ use Fulll\Domain\Location;
 use Fulll\Domain\PlateNumber;
 use Fulll\Domain\UserId;
 use Fulll\Domain\Vehicle;
+use Fulll\Tests\Assertion\LocationAssertions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -22,6 +23,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class FleetTest extends TestCase
 {
+    use LocationAssertions;
+
     private Fleet $fleet;
     private PlateNumber $plate;
 
@@ -72,7 +75,7 @@ final class FleetTest extends TestCase
 
         $this->fleet->park($this->plate, $location);
 
-        self::assertTrue($location->equals($this->fleet->locationOf($this->plate)));
+        self::assertSameLocation($location, $this->fleet->locationOf($this->plate));
     }
 
     #[Test]
@@ -96,7 +99,7 @@ final class FleetTest extends TestCase
 
         $this->fleet->park($this->plate, $home);
 
-        self::assertTrue($home->equals($this->fleet->locationOf($this->plate)));
+        self::assertSameLocation($home, $this->fleet->locationOf($this->plate));
     }
 
     #[Test]
@@ -128,7 +131,7 @@ final class FleetTest extends TestCase
 
         self::assertCount(2, $vehicles);
         self::assertTrue($vehicles[0]->plateNumber->equals($this->plate));
-        self::assertTrue($location->equals($vehicles[0]->location));
+        self::assertSameLocation($location, $vehicles[0]->location);
         self::assertTrue($vehicles[1]->plateNumber->equals($otherPlate));
         self::assertNull($vehicles[1]->location);
     }
@@ -143,7 +146,7 @@ final class FleetTest extends TestCase
 
         self::assertTrue($fleet->id->equals($id));
         self::assertSame('john', $fleet->userId->value);
-        self::assertTrue($location->equals($fleet->locationOf($this->plate)));
+        self::assertSameLocation($location, $fleet->locationOf($this->plate));
     }
 
     #[Test]

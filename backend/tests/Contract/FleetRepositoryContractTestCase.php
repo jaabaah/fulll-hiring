@@ -11,6 +11,7 @@ use Fulll\Domain\FleetRepository;
 use Fulll\Domain\Location;
 use Fulll\Domain\PlateNumber;
 use Fulll\Domain\UserId;
+use Fulll\Tests\Assertion\LocationAssertions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +21,8 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class FleetRepositoryContractTestCase extends TestCase
 {
+    use LocationAssertions;
+
     private FleetRepository $repository;
 
     /**
@@ -81,8 +84,8 @@ abstract class FleetRepositoryContractTestCase extends TestCase
         $found = $this->repository->get($fleet->id);
 
         self::assertCount(3, $found->vehicles());
-        self::assertTrue($withAltitude->equals($found->locationOf(new PlateNumber('AB-123-CD'))));
-        self::assertTrue($withoutAltitude->equals($found->locationOf(new PlateNumber('EF-456-GH'))));
+        self::assertSameLocation($withAltitude, $found->locationOf(new PlateNumber('AB-123-CD')));
+        self::assertSameLocation($withoutAltitude, $found->locationOf(new PlateNumber('EF-456-GH')));
         self::assertNull($found->locationOf(new PlateNumber('IJ-789-KL')));
     }
 
@@ -100,7 +103,7 @@ abstract class FleetRepositoryContractTestCase extends TestCase
         $fleet->park($plate, $newLocation);
         $this->repository->save($fleet);
 
-        self::assertTrue($newLocation->equals($this->repository->get($fleet->id)->locationOf($plate)));
+        self::assertSameLocation($newLocation, $this->repository->get($fleet->id)->locationOf($plate));
     }
 
     #[Test]
@@ -117,7 +120,7 @@ abstract class FleetRepositoryContractTestCase extends TestCase
         $this->repository->save($myFleet);
         $this->repository->save($otherFleet);
 
-        self::assertTrue($myLocation->equals($this->repository->get($myFleet->id)->locationOf($plate)));
+        self::assertSameLocation($myLocation, $this->repository->get($myFleet->id)->locationOf($plate));
         self::assertNull($this->repository->get($otherFleet->id)->locationOf($plate));
     }
 }

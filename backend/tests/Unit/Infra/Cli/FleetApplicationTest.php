@@ -9,6 +9,7 @@ use Fulll\Domain\Location;
 use Fulll\Domain\PlateNumber;
 use Fulll\Infra\Cli\FleetApplication;
 use Fulll\Infra\InMemory\InMemoryFleetRepository;
+use Fulll\Tests\Assertion\LocationAssertions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
@@ -20,6 +21,8 @@ use Symfony\Component\Console\Tester\ApplicationTester;
  */
 final class FleetApplicationTest extends TestCase
 {
+    use LocationAssertions;
+
     private InMemoryFleetRepository $fleets;
     private ApplicationTester $cli;
 
@@ -98,9 +101,7 @@ final class FleetApplicationTest extends TestCase
         ]);
 
         self::assertSame(Command::SUCCESS, $exitCode);
-        self::assertTrue(
-            new Location(43.5283, 5.4497, 173.5)->equals($this->locationOf($fleetId)),
-        );
+        self::assertSameLocation(new Location(43.5283, 5.4497, 173.5), $this->locationOf($fleetId));
     }
 
     #[Test]
@@ -122,7 +123,7 @@ final class FleetApplicationTest extends TestCase
         }
 
         self::assertSame(Command::SUCCESS, $exitCode);
-        self::assertTrue(new Location(-33.8688, 151.2093)->equals($this->locationOf($fleetId)));
+        self::assertSameLocation(new Location(-33.8688, 151.2093), $this->locationOf($fleetId));
     }
 
     #[Test]

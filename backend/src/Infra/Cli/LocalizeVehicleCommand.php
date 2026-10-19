@@ -17,16 +17,20 @@ final readonly class LocalizeVehicleCommand
 {
     public function __construct(
         private ParkVehicleHandler $parkVehicle,
-    ) {
-    }
+    ) {}
 
     public function __invoke(
-        #[Argument(description: 'Id of the fleet')] string $fleetId,
-        #[Argument(description: 'Plate number of the vehicle')] string $vehiclePlateNumber,
-        #[Argument(description: 'Latitude, in decimal degrees')] string $lat,
-        #[Argument(description: 'Longitude, in decimal degrees')] string $lng,
+        #[Argument(description: 'Id of the fleet')]
+        string $fleetId,
+        #[Argument(description: 'Plate number of the vehicle')]
+        string $vehiclePlateNumber,
+        #[Argument(description: 'Latitude, in decimal degrees')]
+        string $lat,
+        #[Argument(description: 'Longitude, in decimal degrees')]
+        string $lng,
         OutputInterface $output,
-        #[Argument(description: 'Altitude, in meters')] ?string $alt = null,
+        #[Argument(description: 'Altitude, in meters')]
+        ?string $alt = null,
     ): int {
         ($this->parkVehicle)(new ParkVehicle(
             $fleetId,

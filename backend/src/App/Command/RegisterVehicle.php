@@ -9,6 +9,5 @@ final readonly class RegisterVehicle
     public function __construct(
         public string $fleetId,
         public string $plateNumber,
-    ) {
-    }
+    ) {}
 }

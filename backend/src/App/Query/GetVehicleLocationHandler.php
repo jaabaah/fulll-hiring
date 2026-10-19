@@ -13,8 +13,7 @@ final readonly class GetVehicleLocationHandler
 {
     public function __construct(
         private FleetRepository $fleets,
-    ) {
-    }
+    ) {}
 
     /**
      * @return Location|null null if the vehicle has never been parked

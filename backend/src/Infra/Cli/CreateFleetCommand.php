@@ -16,11 +16,11 @@ final readonly class CreateFleetCommand
 {
     public function __construct(
         private CreateFleetHandler $createFleet,
-    ) {
-    }
+    ) {}
 
     public function __invoke(
-        #[Argument(description: 'Id of the user owning the fleet')] string $userId,
+        #[Argument(description: 'Id of the user owning the fleet')]
+        string $userId,
         OutputInterface $output,
     ): int {
         // Only the id on stdout, so that it can be captured: FLEET_ID=$(./fleet create john)

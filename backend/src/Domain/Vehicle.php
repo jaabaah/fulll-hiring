@@ -15,8 +15,7 @@ final readonly class Vehicle
     public function __construct(
         public PlateNumber $plateNumber,
         public ?Location $location = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @throws VehicleAlreadyParkedHere

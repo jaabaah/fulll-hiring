@@ -23,9 +23,27 @@ final class Fleet
     ) {
     }
 
+    /**
+     * A brand new fleet, without any vehicle.
+     */
     public static function create(FleetId $id, UserId $userId): self
     {
         return new self($id, $userId);
+    }
+
+    /**
+     * An existing fleet, rebuilt from its persisted state (e.g. by a repository).
+     *
+     * @throws VehicleAlreadyRegistered
+     */
+    public static function reconstitute(FleetId $id, UserId $userId, Vehicle ...$vehicles): self
+    {
+        $fleet = new self($id, $userId);
+        foreach ($vehicles as $vehicle) {
+            $fleet->add($vehicle);
+        }
+
+        return $fleet;
     }
 
     /**
@@ -33,11 +51,7 @@ final class Fleet
      */
     public function register(PlateNumber $plate): void
     {
-        if ($this->hasVehicle($plate)) {
-            throw VehicleAlreadyRegistered::withPlate($plate);
-        }
-
-        $this->vehicles[$plate->value] = new Vehicle($plate);
+        $this->add(new Vehicle($plate));
     }
 
     /**
@@ -62,6 +76,26 @@ final class Fleet
     public function locationOf(PlateNumber $plate): ?Location
     {
         return $this->vehicle($plate)->location;
+    }
+
+    /**
+     * @return list<Vehicle> in registration order
+     */
+    public function vehicles(): array
+    {
+        return array_values($this->vehicles);
+    }
+
+    /**
+     * @throws VehicleAlreadyRegistered
+     */
+    private function add(Vehicle $vehicle): void
+    {
+        if ($this->hasVehicle($vehicle->plateNumber)) {
+            throw VehicleAlreadyRegistered::withPlate($vehicle->plateNumber);
+        }
+
+        $this->vehicles[$vehicle->plateNumber->value] = $vehicle;
     }
 
     /**

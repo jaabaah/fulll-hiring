@@ -12,6 +12,7 @@ use Fulll\Domain\FleetId;
 use Fulll\Domain\Location;
 use Fulll\Domain\PlateNumber;
 use Fulll\Domain\UserId;
+use Fulll\Domain\Vehicle;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -112,5 +113,60 @@ final class FleetTest extends TestCase
         $this->expectException(VehicleNotRegistered::class);
 
         $this->fleet->locationOf($this->plate);
+    }
+
+    #[Test]
+    public function itListsItsVehiclesWithTheirLocation(): void
+    {
+        $location = new Location(43.5283, 5.4497);
+        $otherPlate = new PlateNumber('EF-456-GH');
+        $this->fleet->register($this->plate);
+        $this->fleet->register($otherPlate);
+        $this->fleet->park($this->plate, $location);
+
+        $vehicles = $this->fleet->vehicles();
+
+        self::assertCount(2, $vehicles);
+        self::assertTrue($vehicles[0]->plateNumber->equals($this->plate));
+        self::assertTrue($location->equals($vehicles[0]->location));
+        self::assertTrue($vehicles[1]->plateNumber->equals($otherPlate));
+        self::assertNull($vehicles[1]->location);
+    }
+
+    #[Test]
+    public function itIsReconstitutedFromAPersistedState(): void
+    {
+        $id = FleetId::generate();
+        $location = new Location(43.5283, 5.4497, 173.0);
+
+        $fleet = Fleet::reconstitute($id, new UserId('john'), new Vehicle($this->plate, $location));
+
+        self::assertTrue($fleet->id->equals($id));
+        self::assertSame('john', $fleet->userId->value);
+        self::assertTrue($location->equals($fleet->locationOf($this->plate)));
+    }
+
+    #[Test]
+    public function aReconstitutedFleetStillEnforcesItsRules(): void
+    {
+        $location = new Location(43.5283, 5.4497);
+        $fleet = Fleet::reconstitute(FleetId::generate(), new UserId('john'), new Vehicle($this->plate, $location));
+
+        $this->expectException(VehicleAlreadyParkedHere::class);
+
+        $fleet->park($this->plate, $location);
+    }
+
+    #[Test]
+    public function itCannotBeReconstitutedWithTheSameVehicleTwice(): void
+    {
+        $this->expectException(VehicleAlreadyRegistered::class);
+
+        Fleet::reconstitute(
+            FleetId::generate(),
+            new UserId('john'),
+            new Vehicle($this->plate),
+            new Vehicle(new PlateNumber('ab-123-cd')),
+        );
     }
 }

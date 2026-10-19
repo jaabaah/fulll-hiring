@@ -16,7 +16,7 @@ final class PostgresFleetRepositoryTest extends FleetRepositoryContractTestCase
 {
     protected function createRepository(): FleetRepository
     {
-        $pdo = PdoFactory::fromUrl((string) getenv('DATABASE_URL'));
+        $pdo = PdoFactory::fromUrl((string) getenv('TEST_DATABASE_URL'));
         $pdo->exec('TRUNCATE fleets CASCADE');
 
         return new PostgresFleetRepository($pdo);

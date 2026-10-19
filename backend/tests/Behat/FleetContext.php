@@ -23,6 +23,8 @@ use Fulll\Domain\Exception\VehicleAlreadyParkedHere;
 use Fulll\Domain\Exception\VehicleAlreadyRegistered;
 use Fulll\Domain\FleetRepository;
 use Fulll\Infra\InMemory\InMemoryFleetRepository;
+use Fulll\Infra\Postgres\PdoFactory;
+use Fulll\Infra\Postgres\PostgresFleetRepository;
 use RuntimeException;
 
 /**
@@ -40,10 +42,24 @@ final class FleetContext implements Context
     private float $longitude;
     private ?DomainException $caughtError = null;
 
-    public function __construct()
+    /**
+     * Behat creates a new context for each scenario: every scenario starts with an empty repository.
+     *
+     * @param string|null $databaseUrl null to run in memory, a PostgreSQL URL to run on the real infrastructure
+     */
+    public function __construct(?string $databaseUrl = null)
     {
-        // Behat creates a new context for each scenario: every scenario starts with an empty repository.
-        $this->fleets = new InMemoryFleetRepository();
+        $this->fleets = $databaseUrl === null
+            ? new InMemoryFleetRepository()
+            : self::emptyPostgresRepository($databaseUrl);
+    }
+
+    private static function emptyPostgresRepository(string $databaseUrl): PostgresFleetRepository
+    {
+        $pdo = PdoFactory::fromUrl($databaseUrl);
+        $pdo->exec('TRUNCATE fleets CASCADE');
+
+        return new PostgresFleetRepository($pdo);
     }
 
     #[Given('my fleet')]

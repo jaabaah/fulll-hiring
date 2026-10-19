@@ -21,6 +21,24 @@
         "behat/behat": "^4.0",
         "phpunit/phpunit": "^13.4",
         "phpstan/phpstan": "^2.3",
-        "friendsofphp/php-cs-fixer": "^3.95"
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "deptrac/deptrac": "^4.7"
+    },
+    "scripts": {
+        "cs": "php-cs-fixer check --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "phpstan": "phpstan analyse --no-progress",
+        "deptrac": "deptrac analyse --no-progress",
+        "test:unit": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration",
+        "behat": "behat",
+        "check": [
+            "@cs",
+            "@phpstan",
+            "@deptrac",
+            "@test:unit",
+            "@test:integration",
+            "@behat"
+        ]
     }
 }

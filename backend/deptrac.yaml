@@ -1,0 +1,25 @@
+# Enforces the hexagonal architecture: dependencies always point towards the domain.
+deptrac:
+  paths:
+    - ./src
+  layers:
+    - name: Domain
+      collectors:
+        - type: classLike
+          value: ^Fulll\\Domain\\.*
+    - name: App
+      collectors:
+        - type: classLike
+          value: ^Fulll\\App\\.*
+    - name: Infra
+      collectors:
+        - type: classLike
+          value: ^Fulll\\Infra\\.*
+    - name: Vendor
+      collectors:
+        - type: classLike
+          value: ^Symfony\\.*
+  ruleset:
+    Domain: ~                     # pure PHP: depends on nothing
+    App: [Domain]                 # use cases orchestrate the domain
+    Infra: [App, Domain, Vendor]  # adapters: the only layer allowed to use libraries

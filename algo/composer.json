@@ -22,6 +22,14 @@
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "cs": "php-cs-fixer check --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "phpstan": "phpstan analyse --no-progress",
+        "test": "phpunit",
+        "check": [
+            "@cs",
+            "@phpstan",
+            "@test"
+        ]
     }
 }
